@@ -6,6 +6,10 @@ import numpy as np
 import scipy.stats as stats
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+
 
 # Set page configuration
 st.set_page_config(
@@ -127,6 +131,9 @@ if selected == 'Diabetes Prediction':
     st.header('🩺 Diabetes Prediction using Machine Learning')
     st.markdown("Provide the following health parameters to assess diabetes risk:")
 
+    patient_name = st.text_input("🧍 Patient Name")
+    patient_id = st.text_input("🆔 Patient ID")
+
     # Input form section
     with st.expander("🔍 Input Parameters"):
         col1, col2, col3 = st.columns(3)
@@ -185,6 +192,59 @@ if selected == 'Diabetes Prediction':
                 if diab_prediction[0] == 1:
                     st.error(f'🚨 You are likely diabetic with a probability of {probability_percentage:.2f}% '
                              f'(Confidence Range: {lower_bound:.2f}% - {upper_bound:.2f}%)')
+                    
+                    def generate_pdf_report(name, uid, probability, lower_bound, upper_bound, result, doctor_list=None):
+                        buffer = BytesIO()
+                        c = canvas.Canvas(buffer, pagesize=letter)
+                        width, height = letter
+
+                        c.setFont("Helvetica-Bold", 16)
+                        c.drawString(50, height - 50, "🧠 Diabetes Disease Prediction Report")
+
+                        c.setFont("Helvetica", 12)
+                        c.drawString(50, height - 100, f"Patient Name: {name}")
+                        c.drawString(50, height - 120, f"Patient ID: {uid}")
+                        c.drawString(50, height - 140, f"Prediction Result: {'High Risk' if result == 1 else 'Low Risk'}")
+                        c.drawString(50, height - 160, f"Probability: {probability:.2f}%")
+                        c.drawString(50, height - 180, f"Confidence Interval: {lower_bound:.2f}% - {upper_bound:.2f}%")
+
+                        if result == 1 and doctor_list:
+                            c.setFont("Helvetica-Bold", 14)
+                            c.drawString(50, height - 220, "Recommended Doctors:")
+                            y = height - 240
+                            c.setFont("Helvetica", 11)
+                            for doctor in doctor_list:
+                                c.drawString(60, y, f"Name: {doctor['name']}")
+                                y -= 15
+                                c.drawString(60, y, f"Specialty: {doctor['specialty']}")
+                                y -= 15
+                                c.drawString(60, y, f"Contact: {doctor['contact']}")
+                                y -= 25
+                                if y < 100:
+                                    c.showPage()
+                                    y = height - 50
+
+                        c.save()
+                        buffer.seek(0)
+                        return buffer
+                    
+                    pdf_buffer = generate_pdf_report(
+                    name=patient_name,
+                    uid=patient_id,
+                    probability=probability_percentage,
+                    lower_bound=lower_bound,
+                    upper_bound=upper_bound,
+                    result=diab_prediction,
+                    doctor_list=doctors_for_conditions['diabetes'] if diab_prediction == 1 else None
+                )
+                    
+                    st.download_button(
+                        label="📄 Download Report Card as PDF",
+                        data=pdf_buffer,
+                        file_name="Diabetes_Report.pdf",
+                        mime="application/pdf"
+                    )
+
 
                     st.subheader("👨‍⚕️ Recommended Doctors for Diabetes:")
                     for doctor in doctors_for_conditions['diabetes']:
@@ -241,6 +301,9 @@ from scipy import stats
 if selected == 'Heart Disease Prediction':
     st.header('💓 Heart Disease Prediction using Machine Learning')
     st.markdown("Provide the following health parameters to assess your risk for heart disease:")
+
+    patient_name = st.text_input("🧍 Patient Name")
+    patient_id = st.text_input("🆔 Patient ID")
 
     # Input Section
     with st.expander("🔍 Input Parameters"):
@@ -306,6 +369,59 @@ if selected == 'Heart Disease Prediction':
                 if heart_prediction == 1:
                     st.error(f'🚨 High Risk of Heart Disease Detected! Probability: {probability_percentage_heart:.2f}% '
                              f'(Confidence Range: {lower_bound:.2f}% - {upper_bound:.2f}%)')
+                    
+
+                    def generate_pdf_report(name, uid, probability, lower_bound, upper_bound, result, doctor_list=None):
+                        buffer = BytesIO()
+                        c = canvas.Canvas(buffer, pagesize=letter)
+                        width, height = letter
+
+                        c.setFont("Helvetica-Bold", 16)
+                        c.drawString(50, height - 50, "🧠 Heart Disease Prediction Report")
+
+                        c.setFont("Helvetica", 12)
+                        c.drawString(50, height - 100, f"Patient Name: {name}")
+                        c.drawString(50, height - 120, f"Patient ID: {uid}")
+                        c.drawString(50, height - 140, f"Prediction Result: {'High Risk' if result == 1 else 'Low Risk'}")
+                        c.drawString(50, height - 160, f"Probability: {probability:.2f}%")
+                        c.drawString(50, height - 180, f"Confidence Interval: {lower_bound:.2f}% - {upper_bound:.2f}%")
+
+                        if result == 1 and doctor_list:
+                            c.setFont("Helvetica-Bold", 14)
+                            c.drawString(50, height - 220, "Recommended Doctors:")
+                            y = height - 240
+                            c.setFont("Helvetica", 11)
+                            for doctor in doctor_list:
+                                c.drawString(60, y, f"Name: {doctor['name']}")
+                                y -= 15
+                                c.drawString(60, y, f"Specialty: {doctor['specialty']}")
+                                y -= 15
+                                c.drawString(60, y, f"Contact: {doctor['contact']}")
+                                y -= 25
+                                if y < 100:
+                                    c.showPage()
+                                    y = height - 50
+
+                        c.save()
+                        buffer.seek(0)
+                        return buffer
+                    
+                    pdf_buffer = generate_pdf_report(
+                    name=patient_name,
+                    uid=patient_id,
+                    probability=probability_percentage_heart,
+                    lower_bound=lower_bound,
+                    upper_bound=upper_bound,
+                    result=heart_prediction,
+                    doctor_list=doctors_for_conditions['heart disease'] if heart_prediction == 1 else None
+                )
+                    
+                    st.download_button(
+                        label="📄 Download Report Card as PDF",
+                        data=pdf_buffer,
+                        file_name="Heart_Report.pdf",
+                        mime="application/pdf"
+                    )
                     st.subheader("🩺 Recommended Cardiologists:")
                     for doctor in doctors_for_conditions['heart disease']:
                         st.markdown(f"""
@@ -358,6 +474,9 @@ from scipy import stats
 if selected == "Parkinsons Prediction":
     st.header("🧠 Parkinson's Disease Prediction using Machine Learning")
     st.markdown("Fill in the vocal measurements below to analyze the risk of Parkinson's Disease.")
+
+    patient_name = st.text_input("🧍 Patient Name")
+    patient_id = st.text_input("🆔 Patient ID")
 
     # Input Section
     with st.expander("🎙️ Input Parameters"):
@@ -444,6 +563,61 @@ if selected == "Parkinsons Prediction":
                     st.error(f"🚨 High risk of Parkinson's disease detected!\n\n"
                              f"Probability: **{probability_percentage_park:.2f}%**\n"
                              f"Confidence Interval: **{lower_bound:.2f}% - {upper_bound:.2f}%**")
+                    
+                    def generate_pdf_report(name, uid,probability, lower_bound, upper_bound, result, doctor_list=None):
+                        buffer = BytesIO()
+                        c = canvas.Canvas(buffer, pagesize=letter)
+                        width, height = letter
+
+                        c.setFont("Helvetica-Bold", 16)
+                        c.drawString(50, height - 50, "🧠 Parkinson's Disease Prediction Report")
+
+                        c.setFont("Helvetica", 12)
+                        c.drawString(50, height - 100, f"Patient Name: {name}")
+                        c.drawString(50, height - 120, f"Patient ID: {uid}")
+                        c.drawString(50, height - 140, f"Prediction Result: {'High Risk' if result == 1 else 'Low Risk'}")
+                        c.drawString(50, height - 160, f"Probability: {probability:.2f}%")
+                        c.drawString(50, height - 180, f"Confidence Interval: {lower_bound:.2f}% - {upper_bound:.2f}%")
+
+                        if result == 1 and doctor_list:
+                            c.setFont("Helvetica-Bold", 14)
+                            c.drawString(50, height - 220, "Recommended Doctors:")
+                            y = height - 240
+                            c.setFont("Helvetica", 11)
+                            for doctor in doctor_list:
+                                c.drawString(60, y, f"Name: {doctor['name']}")
+                                y -= 15
+                                c.drawString(60, y, f"Specialty: {doctor['specialty']}")
+                                y -= 15
+                                c.drawString(60, y, f"Contact: {doctor['contact']}")
+                                y -= 25
+                                if y < 100:
+                                    c.showPage()
+                                    y = height - 50
+
+                        c.save()
+                        buffer.seek(0)
+                        return buffer
+                    
+                    # Generate and download the PDF report
+                    pdf_buffer = generate_pdf_report(
+                    name=patient_name,
+                    uid=patient_id,
+                    probability=probability_percentage_park,
+                    lower_bound=lower_bound,
+                    upper_bound=upper_bound,
+                    result=result,
+                    doctor_list=doctors_for_conditions['Parkinson’s disease'] if result == 1 else None
+                )
+
+
+                    st.download_button(
+                        label="📄 Download Report Card as PDF",
+                        data=pdf_buffer,
+                        file_name="Parkinson_Report.pdf",
+                        mime="application/pdf"
+                    )
+
 
                     st.subheader("🩺 Recommended Neurologists:")
                     for doctor in doctors_for_conditions["Parkinson’s disease"]:
